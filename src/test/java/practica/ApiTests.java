@@ -2,31 +2,21 @@ package practica;
 
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static practica.Specifications.*;
 
 public class ApiTests {
-
-    @Test
-    public void testWebTourseWithSpec() {
-        //Steps.goWebToursWithSpec(Specifications.requestSpec(),Specifications.responseSpec());
-        Specifications.installSpec(Specifications.requestSpec(), Specifications.responseSpec());
-        Steps.goWebToursWithSpec();
-    }
-
-
-    @Test()
-    public void testWebTourse() {
-        String sessionID = Steps.goWebTours();
-        Steps.getUserData("belltest", "11111", sessionID);
-    }
-
 
     @Test()
     public void firstTest() {
@@ -71,10 +61,6 @@ public class ApiTests {
         Response response = given()
                 .contentType("application/json")
                 .body(data)
-//                .body("email:")
-//                .body("eve.holt@reqres.in")
-//                .body("password:")
-//                .body("12345")
                 .when()
                 .post("https://reqres.in/api/login")
                 .then()
@@ -82,9 +68,75 @@ public class ApiTests {
                 .statusCode(200)
                 .extract()
                 .response();
-        JsonPath jsonResponce = response.jsonPath();
-        Assert.assertEquals(jsonResponce.get("token").toString(), "QpwL5tke4Pnpja7X4", "Name is not valid");
-//        Assert.assertEquals(jsonResponce.get("job")git .toString(),data.get("job"),"Job is not valid");
+        JsonPath jsonResponse = response.jsonPath();
+        Assert.assertEquals(jsonResponse.get("token").toString(), "QpwL5tke4Pnpja7X4", "Name is not valid");
 
+    }
+
+    @Test
+    public void loginSuccessSpec() {
+        Map<String, String> body = new HashMap<>();
+        body.put("email", "eve.holt@reqres.in");
+        body.put("password", "pistol");
+        Response response = given()
+//                .contentType("application/json")
+                .spec(requestSpec())
+                .body(body)
+                .when()
+                .post("login")
+//                .post("https://reqres.in/api/login")
+                .then()
+                .spec(responseSpec())
+                .log().all()
+//                .statusCode(200)
+                .extract()
+                .response();
+        JsonPath jsonResponse = response.jsonPath();
+        Assert.assertEquals(jsonResponse.get("token").toString(), "QpwL5tke4Pnpja7X4", "Name is not valid");
+
+    }
+
+    @Test
+    public void loginFailSpec() {
+        Map<String, String> body = new HashMap<>();
+        body.put("email", "eve.holt@reqres.in");
+        body.put("password", "");
+        Response response = given()
+//                .contentType("application/json")
+                .spec(requestSpec())
+                .body(body)
+                .when()
+                .post("login")
+//                .post("https://reqres.in/api/login")
+                .then()
+//                .spec(responseSpec())
+                .log().all()
+                .statusCode(400)
+                .extract()
+                .response();
+//        JsonPath jsonResponse = response.jsonPath();
+        Assert.assertEquals(response.statusCode(), 400, "Запрос на логин Пользователя без ввода пароля не имеет статус BAD_REQUEST (400) ");
+
+    }
+
+    @Test
+    public void getUsersSpec() {
+        Map<Integer, String> usersAvatar = new HashMap<>();
+        Response response = given()
+                .contentType("application/json")
+                .spec(requestSpec())
+                .when()
+                .get("users?page=2")
+                .then()
+                .spec(responseSpec())
+                .log().all()
+                .extract()
+                .response();
+        JsonPath jsonResponse = response.jsonPath();
+        List list = new ArrayList<Object>();
+       list= jsonResponse.getList("data.avatar");
+        list.stream().forEach(x-> System.out.println(StringUtils.endsWithIgnoreCase(x.toString(), "/128.jpg")) );
+//        System.out.println(StringUtils.endsWithIgnoreCase(list.forEach(), "/128.jpg"));
+        response.jsonPath().getList("data.avatar").forEach(x-> Assert.assertTrue(StringUtils.endsWithIgnoreCase(x.toString(), "/128.jpg"), "Не у всех пользователей имена аватаров совпадают"));
     }
 }

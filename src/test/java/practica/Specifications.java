@@ -3,16 +3,17 @@ package practica;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.filter.log.LogDetail;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
+import org.apache.http.HttpStatus;
 
 public class Specifications {
 
     public static RequestSpecification requestSpec(){
         RequestSpecification reqSpec = new RequestSpecBuilder()
-                .setBaseUri("http://127.0.0.1/")
-                .setPort(1080)
-                .setContentType("application/x-www-form-urlencoded")
+                .setBaseUri("https://reqres.in/api/")
+                .setContentType("application/json")
                 .build();
         return reqSpec;
     }
